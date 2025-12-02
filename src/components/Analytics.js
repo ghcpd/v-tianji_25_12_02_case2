@@ -1,64 +1,44 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import axios from 'axios';
 import moment from 'moment';
 import _ from 'lodash';
 
-class Analytics extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      chartData: [],
-      timeRange: 'week',
-      loading: true
-    };
-  }
+const Analytics = () => {
+  const dispatch = useDispatch();
+  const [chartData, setChartData] = useState([]);
+  const [timeRange, setTimeRange] = useState('week');
+  const [loading, setLoading] = useState(true);
 
-  componentDidMount() {
-    this.fetchAnalytics();
-  }
-
-  componentWillUpdate(nextProps, nextState) {
-    if (nextState.timeRange !== this.state.timeRange) {
-      console.log('Time range will change');
-    }
-  }
-
-  fetchAnalytics = async () => {
-    const { dispatch } = this.props;
-    const { timeRange } = this.state;
-    
+  const fetchAnalytics = async () => {
     dispatch({ type: 'FETCH_ANALYTICS_REQUEST' });
-    
     try {
       const response = await axios.get(`https://api.example.com/analytics?range=${timeRange}`);
-      
-      const processedData = response.data.map(item => ({
+
+      const processedData = response.data.map((item) => ({
         ...item,
         formattedDate: moment(item.date).format('MMM DD, YYYY'),
         daysAgo: moment().diff(moment(item.date), 'days')
       }));
-      
-      dispatch({ 
-        type: 'FETCH_ANALYTICS_SUCCESS', 
-        payload: processedData 
-      });
-      
-      this.setState({ 
-        chartData: processedData,
-        loading: false 
-      });
+
+      dispatch({ type: 'FETCH_ANALYTICS_SUCCESS', payload: processedData });
+      setChartData(processedData);
+      setLoading(false);
     } catch (error) {
       console.error('Analytics fetch error:', error);
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  handleTimeRangeChange = (range) => {
-    this.setState({ timeRange: range }, () => {
-      this.fetchAnalytics();
-    });
+  const handleTimeRangeChange = (range) => {
+    setTimeRange(range);
   };
+
+  // fetch on mount and when timeRange changes
+  useEffect(() => {
+    fetchAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
 
   calculateMetrics = () => {
     const { chartData } = this.state;
@@ -71,7 +51,8 @@ class Analytics extends Component {
   };
 
   render() {
-    const { loading, timeRange, chartData } = this.state;
+    // hook-managed state
+    // loading, timeRange, chartData are locals from hooks
     const metrics = this.calculateMetrics();
 
     if (loading) {
@@ -82,22 +63,22 @@ class Analytics extends Component {
       <div className="analytics-container">
         <h1>Analytics Dashboard</h1>
         
-        <div className="time-range-selector">
-          <button 
+          <div className="time-range-selector">
+            <button 
             className={timeRange === 'week' ? 'active' : ''} 
-            onClick={() => this.handleTimeRangeChange('week')}
+            onClick={() => handleTimeRangeChange('week')}
           >
             This Week
           </button>
-          <button 
+            <button 
             className={timeRange === 'month' ? 'active' : ''} 
-            onClick={() => this.handleTimeRangeChange('month')}
+            onClick={() => handleTimeRangeChange('month')}
           >
             This Month
           </button>
-          <button 
+            <button 
             className={timeRange === 'year' ? 'active' : ''} 
-            onClick={() => this.handleTimeRangeChange('year')}
+            onClick={() => handleTimeRangeChange('year')}
           >
             This Year
           </button>

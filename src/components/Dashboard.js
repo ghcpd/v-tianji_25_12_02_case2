@@ -1,53 +1,49 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import axios from 'axios';
 import moment from 'moment';
 import _ from 'lodash';
 import classNames from 'classnames';
 
-class Dashboard extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      stats: {},
-      loading: true
-    };
-  }
+const Dashboard = () => {
+  const [stats, setStats] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  UNSAFE_componentWillMount() {
-    this.fetchDashboardData();
-  }
-
-  fetchDashboardData = async () => {
+  const fetchDashboardData = async () => {
     try {
       const response = await axios.get('https://api.example.com/dashboard/stats');
       
       const formattedDate = moment().format('MMMM Do YYYY, h:mm:ss a');
       
-      this.setState({
-        stats: response.data,
-        loading: false,
-        lastUpdated: formattedDate
-      });
+      setStats(response.data);
+      setLoading(false);
+      // lastUpdated stored into local state only
+      setLastUpdated(formattedDate);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      this.setState({ loading: false });
+      setLoading(false);
     }
   };
 
-  handleSearch = _.debounce((value) => {
+  const [lastUpdated, setLastUpdated] = useState(null);
+
+  const handleSearch = _.debounce((value) => {
     console.log('Searching for:', value);
   }, 300);
 
-  render() {
-    const { loading, stats } = this.state;
-    
-    const containerClass = classNames({
-      'dashboard-container': true,
-      'loading': loading,
-      'loaded': !loading
-    });
+  useEffect(() => {
+    // run on mount
+    fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // render
+  const containerClass = classNames({
+    'dashboard-container': true,
+    'loading': loading,
+    'loaded': !loading
+  });
+    
     return (
       <div className={containerClass}>
         <h1>Dashboard Overview</h1>
@@ -66,16 +62,12 @@ class Dashboard extends Component {
           </div>
           <div className="stat-card">
             <h3>Last Updated</h3>
-            <p>{this.state.lastUpdated}</p>
+            <p>{lastUpdated}</p>
           </div>
         </div>
       </div>
     );
   }
-}
+};
 
-const mapStateToProps = (state) => ({
-  user: state.user
-});
-
-export default connect(mapStateToProps)(Dashboard);
+export default Dashboard;
