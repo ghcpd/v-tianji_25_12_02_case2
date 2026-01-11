@@ -36,10 +36,17 @@ module.exports = {
     })
   ],
   devServer: {
-    contentBase: path.join(__dirname, 'dist'),
+    // webpack 5+: `contentBase` was renamed to `static`.
+    static: {
+      directory: path.join(__dirname, 'dist'),
+    },
     compress: true,
     port: 3000,
-    historyApiFallback: true
+    historyApiFallback: true,
+    // use the new client overlay options
+    client: {
+      overlay: true
+    }
   },
   resolve: {
     extensions: ['.js', '.jsx']

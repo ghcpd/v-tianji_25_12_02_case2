@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
-import { Route, Switch, withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
+import React, { useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 import Dashboard from './components/Dashboard';
 import Products from './components/Products';
@@ -8,40 +8,36 @@ import Analytics from './components/Analytics';
 import Navigation from './components/Navigation';
 
 // Using class component with legacy lifecycle methods
-class App extends Component {
-  static propTypes = {
-    user: PropTypes.object,
-    location: PropTypes.object.isRequired
-  };
+const App = () => {
+  const user = useSelector(state => state.user);
+  const location = useLocation();
 
-  UNSAFE_componentWillMount() {
-    console.log('Component will mount');
-  }
+  // replaces legacy mounting + route-change lifecycle hooks
+  useEffect(() => {
+    console.log('Component mounted');
+  }, []);
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (this.props.location !== nextProps.location) {
-      console.log('Route changed');
-    }
-  }
+  useEffect(() => {
+    console.log('Route changed', location.pathname);
+  }, [location]);
 
-  render() {
-    return (
-      <div className="app-container">
-        <Navigation />
-        <div className="main-content">
-          <Switch>
-            <Route exact path="/" component={Dashboard} />
-            <Route path="/products" component={Products} />
-            <Route path="/analytics" component={Analytics} />
-          </Switch>
-        </div>
+  return (
+    <div className="app-container">
+      <Navigation />
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/analytics" element={<Analytics />} />
+        </Routes>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
 
-const mapStateToProps = (state) => ({
-  user: state.user
-});
+App.propTypes = {
+  // user is now read from the store via useSelector; kept for documentation
+  user: PropTypes.object
+};
 
-export default withRouter(connect(mapStateToProps)(App));
+export default App;
